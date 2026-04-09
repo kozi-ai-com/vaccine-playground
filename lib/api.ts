@@ -11,9 +11,10 @@ async function f<T>(url: string, opts?: RequestInit): Promise<T> {
     if (!r.ok) throw new Error(`API returned ${r.status}: ${await r.text()}`);
     return r.json();
   } catch (err) {
-    if (err instanceof TypeError && err.message === "Failed to fetch") {
-      throw new Error("Backend not reachable. Start FastAPI on port 8001.");
-    }
+    throw new Error("Backend not reachable. Check API URL or CORS.");
+    /*if (err instanceof TypeError && err.message === "Failed to fetch") {
+      throw new Error("Backend not reachable. Start FastAPI on port 8000.");
+    }*/
     throw err;
   }
 }
