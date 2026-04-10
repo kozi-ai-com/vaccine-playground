@@ -115,7 +115,7 @@ export default function PlaygroundPage() {
           {error && (
             <Card className="border-destructive/50 bg-destructive/5"><CardContent className="flex items-start gap-3 pt-6">
               <div className="rounded-full bg-destructive/10 p-2 shrink-0"><IconAlertTriangle className="size-4 text-destructive" /></div>
-              <div><p className="text-sm font-semibold text-destructive">Connection Error</p><p className="text-sm text-muted-foreground mt-1">{error}</p><p className="text-xs text-muted-foreground mt-3">Start your backend:</p><code className="mt-1 block rounded bg-muted px-3 py-2 text-xs font-mono">cd api && uvicorn main:app --port 8001 --reload</code></div>
+              <div><p className="text-sm font-semibold text-destructive">Connection Error</p><p className="text-sm text-muted-foreground mt-1">{error}</p><p className="text-xs text-muted-foreground mt-3">Start your backend:</p><code className="mt-1 block rounded bg-muted px-3 py-2 text-xs font-mono">cd api && uvicorn main:app --port 8000 --reload</code></div>
             </CardContent></Card>
           )}
           {!running && !ps && !error && (
