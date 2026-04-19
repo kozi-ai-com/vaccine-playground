@@ -1,17 +1,23 @@
 import type {
-  PipelineRunRequest, PipelineRunResponse,
-  PipelineStatusResponse, PipelineResults, RunSummary,
-} from "@/types";
+  PipelineRunRequest,
+  PipelineRunResponse,
+  PipelineStatusResponse,
+  PipelineResults,
+  RunSummary,
+} from '@/types';
 
-const API = process.env.NEXT_PUBLIC_API_URL || "";
+const API = process.env.NEXT_PUBLIC_API_URL || '';
 
 async function f<T>(url: string, opts?: RequestInit): Promise<T> {
   try {
-    const r = await fetch(url, { headers: { "Content-Type": "application/json" }, ...opts });
+    const r = await fetch(url, {
+      headers: { 'Content-Type': 'application/json' },
+      ...opts,
+    });
     if (!r.ok) throw new Error(`API returned ${r.status}: ${await r.text()}`);
     return r.json();
   } catch (err) {
-    throw new Error("Backend not reachable. Check API URL or CORS.");
+    throw new Error('Backend not reachable. Check API URL or CORS.');
     /*if (err instanceof TypeError && err.message === "Failed to fetch") {
       throw new Error("Backend not reachable. Start FastAPI on port 8000.");
     }*/
@@ -22,7 +28,10 @@ async function f<T>(url: string, opts?: RequestInit): Promise<T> {
 export const api = {
   health: () => f<{ status: string }>(`${API}/api/health`),
   startRun: (body: PipelineRunRequest) =>
-    f<PipelineRunResponse>(`${API}/api/pipeline/run`, { method: "POST", body: JSON.stringify(body) }),
+    f<PipelineRunResponse>(`${API}/api/pipeline/run`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
   getStatus: (id: string) =>
     f<PipelineStatusResponse>(`${API}/api/pipeline/status/${id}`),
   getResults: (id: string) =>
@@ -30,12 +39,14 @@ export const api = {
   listRuns: async () => {
     try {
       const runs = await f<any[]>(`${API}/api/runs`);
-      // Normalize: API might return run_id instead of id
       return runs.map((r: any) => ({
-        ...r,
-        id: r.id || r.run_id,
-        pathogen_name: r.pathogen_name || r.input_value || null,
-        global_coverage: r.global_coverage ?? r.hla_coverage_global ?? null,
+        id: r.run_id || r.id,
+        pathogen_name: r.input_value || null,
+        input_type: r.input_type || 'pathogen',
+        status: r.status,
+        created_at: r.started_at || r.created_at || '',
+        completed_at: r.completed_at || null,
+        global_coverage: r.global_coverage ?? null,
       })) as RunSummary[];
     } catch {
       return [];
