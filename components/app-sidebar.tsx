@@ -12,6 +12,11 @@ import {
   IconSearch,
   IconFlask2,
   IconShieldCheck,
+  IconHistoryToggle,
+  IconListDetails,
+
+  IconUsersGroup,
+  IconAiAgents
 } from "@tabler/icons-react"
 
 import { useAuth } from "@/components/auth-provider"
@@ -31,10 +36,10 @@ import { Badge } from "@/components/ui/badge"
 
 const navMain = [
   { title: "Playground", url: "/playground", icon: IconPlayerPlay },
-  { title: "Run History", url: "/history", icon: IconHistory },
-  { title: "Molecular Design", url: "#", icon: IconDna, soon: true },
-  { title: "Compound Library", url: "#", icon: IconFlask2, soon: true },
-  { title: "Validation", url: "#", icon: IconShieldCheck, soon: true },
+  { title: "Run History", url: "/history", icon: IconHistoryToggle },
+  { title: "Projects", url: "/projects", icon: IconListDetails, soon: true },
+  { title: "Team", url: "/team", icon: IconUsersGroup, soon: true },
+  { title: "Agent Log", url: "/agent-log", icon: IconAiAgents, soon: true },
 ]
 
 const navSecondary = [

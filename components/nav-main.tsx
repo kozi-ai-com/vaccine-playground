@@ -33,12 +33,12 @@ export function NavMain({
               <SidebarMenuButton
                 tooltip={item.title}
                 isActive={pathname === item.url || pathname.startsWith(item.url + "/")}
-                onClick={() => !item.soon && item.url !== "#" && router.push(item.url)}
+                onClick={() => item.url !== "#" && router.push(item.url)}
                 className={item.soon ? "opacity-60 cursor-default" : ""}
               >
                 {item.icon && <item.icon />}
                 <span>{item.title}</span>
-                {item.soon && <Badge variant="secondary" className="ml-auto text-[9px] px-1.5 py-0">Soon</Badge>}
+                {item.soon && <Badge variant="secondary" className="ml-auto text-[9px] px-1.5 py-0">NEW</Badge>}
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
