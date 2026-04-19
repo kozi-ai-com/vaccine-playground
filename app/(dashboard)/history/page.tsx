@@ -1,13 +1,19 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconEye, IconDotsVertical, IconTrash, IconDownload } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import type { RunSummary } from "@/types";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 
 function formatDate(iso: string): string {
   try {
@@ -20,6 +26,65 @@ function formatDate(iso: string): string {
   } catch {
     return "-";
   }
+}
+
+function DownloadMenu({ runId }: { runId: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // close on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleDownload = async (format: "csv" | "json") => {
+    setOpen(false);
+    // ... your existing logic
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            onClick={() => setOpen(!open)}
+          >
+            <IconDownload className="size-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          Download
+        </TooltipContent>
+      </Tooltip>
+
+      {open && (
+
+        <div className="absolute right-0 top-full mt-1 z-[999] rounded-lg border bg-popover p-1 shadow-md min-w-[120px]">
+          <button onClick={() => handleDownload("csv")} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-accent">
+            CSV
+          </button>
+          <button onClick={() => handleDownload("json")} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-accent">
+            JSON
+          </button>
+          <button disabled className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground cursor-not-allowed">
+            PDF <Badge variant="secondary" className="text-[9px] ml-auto">Soon</Badge>
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function HistoryPage() {
@@ -59,41 +124,60 @@ export default function HistoryPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="rounded-lg border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Date</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Pathogen</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Status</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground">Coverage</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((r, index) => (
-                <tr
-                  key={r.id || `run-${index}`}
-                  className="border-b last:border-0 hover:bg-muted/50 cursor-pointer transition-colors"
-                  onClick={() => r.status === "completed" && router.push(`/results/${r.id}`)}
-                >
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(r.created_at)}</td>
-                  <td className="px-4 py-3 font-medium">{r.pathogen_name || "-"}</td>
-                  <td className="px-4 py-3">
-                    <Badge variant={r.status === "completed" ? "default" : r.status === "failed" ? "destructive" : "secondary"}>
-                      {r.status}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono text-xs">
-                    {r.global_coverage != null ? `${r.global_coverage.toFixed(1)}%` : "-"}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {r.status === "completed" && <Button variant="ghost" size="sm">View →</Button>}
-                  </td>
+        <div className="rounded-lg border overflow-visible relative">
+          <TooltipProvider delay={200}>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Date</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Pathogen</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Status</th>
+                  <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground">Coverage</th>
+                  <th className="text-right px-8 py-3 text-xs font-medium text-muted-foreground">Action</th>
+
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {runs.map((r, index) => (
+                  <tr
+                    key={r.id || `run-${index}`}
+                    className="border-b last:border-0 hover:bg-muted/50 transition-colors"
+
+                  >
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(r.created_at)}</td>
+                    <td className="px-4 py-3 font-medium">{r.pathogen_name || "-"}</td>
+                    <td className="px-4 py-3">
+                      <Badge variant={r.status === "completed" ? "default" : r.status === "failed" ? "destructive" : "secondary"}>
+                        {r.status}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono text-xs">
+                      {r.global_coverage != null ? `${r.global_coverage.toFixed(1)}%` : "-"}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {r.status === "completed" && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>                        <Button variant="ghost" size="icon" className="size-8" onClick={() => router.push(`/results/${r.id}`)}>
+                              <IconEye className="size-4" />
+                            </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Visualize
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        {r.status === "completed" && (
+                          <DownloadMenu runId={r.id} />
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TooltipProvider>
         </div>
       )}
     </>
