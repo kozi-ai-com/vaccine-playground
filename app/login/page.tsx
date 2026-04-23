@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { IconFlask, IconEye, IconEyeOff } from "@tabler/icons-react";
 import { AlertCircle } from "lucide-react";
@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/components/auth-provider";
 import { AccessDeniedModal } from "@/components/access-denied-modal";
 
-export default function LoginPage() {
+
+function LoginForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const { signIn, user } = useAuth();
@@ -24,7 +25,7 @@ export default function LoginPage() {
   const [loading, setLoading]           = useState(false);
   const [showAccessDenied, setShowAccessDenied] = useState(false);
 
-  // Detect redirect from SessionGuard
+  // Detect redirect from SessionGuard (?reason=expired)
   const sessionExpired = searchParams.get("reason") === "expired";
 
   React.useEffect(() => {
@@ -78,7 +79,7 @@ export default function LoginPage() {
                       </p>
                     </div>
 
-                    {/* Session expired notice, shown when redirected from SessionGuard */}
+                    {/* Session expired notice */}
                     {sessionExpired && !error && (
                       <div className="flex items-start gap-3 rounded-lg border border-border bg-muted px-4 py-3">
                         <AlertCircle className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
@@ -166,7 +167,7 @@ export default function LoginPage() {
                   </div>
                 </form>
 
-                {/* Right panel */}
+                {/* Right decorative panel */}
                 <div className="relative hidden bg-gradient-to-br from-primary via-primary to-primary/80 md:flex md:flex-col md:items-center md:justify-center md:p-10">
                   <div className="absolute top-8 right-8 size-32 rounded-full bg-primary-foreground/5" />
                   <div className="absolute bottom-12 left-6 size-20 rounded-full bg-primary-foreground/5" />
@@ -211,5 +212,19 @@ export default function LoginPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-svh items-center justify-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
