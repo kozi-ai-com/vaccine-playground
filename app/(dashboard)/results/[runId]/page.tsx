@@ -171,8 +171,8 @@ export default function ResultsPage() {
           <CardTitle>Decision Audit Trail</CardTitle>
         </CardHeader>
         <CardContent>
-          <Accordion>
-            {c.decisions.map((d, i) => (
+          <Accordion defaultValue={[]}>
+            {(c.decisions || []).map((d, i) => (
               <AccordionItem key={i} value={`d-${i}`}>
                 <AccordionTrigger>
                   <div className='flex items-center gap-2'>

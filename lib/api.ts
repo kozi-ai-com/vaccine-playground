@@ -5,23 +5,30 @@ import type {
   PipelineResults,
   RunSummary,
 } from '@/types';
+import { supabase } from '@/lib/supabase';
 
 const API = process.env.NEXT_PUBLIC_API_URL || '';
 
-async function f<T>(url: string, opts?: RequestInit): Promise<T> {
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   try {
-    const r = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' },
-      ...opts,
-    });
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+  } catch {}
+  return headers;
+}
+
+async function f<T>(url: string, opts?: RequestInit): Promise<T> {
+  const headers = await getAuthHeaders();
+  try {
+    const r = await fetch(url, { headers, ...opts });
     if (!r.ok) throw new Error(`API returned ${r.status}: ${await r.text()}`);
     return r.json();
   } catch (err) {
+    if (err instanceof Error && err.message.startsWith('API returned')) throw err;
     throw new Error('Backend not reachable. Check API URL or CORS.');
-    /*if (err instanceof TypeError && err.message === "Failed to fetch") {
-      throw new Error("Backend not reachable. Start FastAPI on port 8000.");
-    }*/
-    throw err;
   }
 }
 
@@ -46,7 +53,7 @@ export const api = {
         status: r.status,
         created_at: r.started_at || r.created_at || '',
         completed_at: r.completed_at || null,
-        global_coverage: r.global_coverage ?? null,
+        global_coverage: r.global_coverage_pct ?? r.global_coverage ?? null,
       })) as RunSummary[];
     } catch {
       return [];

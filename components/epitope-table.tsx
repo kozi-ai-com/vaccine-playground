@@ -13,7 +13,8 @@ export function EpitopeTable({ epitopes }: { epitopes: Epitope[] }) {
   const [sk, setSk] = useState<SK>("ic50_nm"); const [sd, setSd] = useState<"asc" | "desc">("asc");
   const sort = (k: SK) => { if (sk === k) setSd(d => d === "asc" ? "desc" : "asc"); else { setSk(k); setSd("asc"); } };
 
-  const filtered = useMemo(() => {
+ const filtered = useMemo(() => {
+    if (!epitopes || !Array.isArray(epitopes)) return [];
     let items = [...epitopes];
     if (tf !== "All") items = items.filter(e => e.epitope_type === tf);
     if (search) { const q = search.toLowerCase(); items = items.filter(e => e.sequence.toLowerCase().includes(q) || e.hla_allele.toLowerCase().includes(q)); }
