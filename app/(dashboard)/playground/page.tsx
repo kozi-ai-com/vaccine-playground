@@ -195,7 +195,7 @@ export default function PlaygroundPage() {
                   <p className="text-sm font-semibold text-destructive">Pipeline Error</p>
                   <p className="text-sm text-muted-foreground mt-1">{error}</p>
                   <p className="text-xs text-muted-foreground mt-3">Start your backend:</p>
-                  <code className="mt-1 block rounded bg-muted px-3 py-2 text-xs font-mono">cd api && uvicorn main:app --port 8000 --reload</code>
+                  <code className="mt-1 block rounded bg-muted px-3 py-2 text-xs font-mono">cd api && uvicorn main:app --port 8001 --reload</code>
                 </div>
               </CardContent>
             </Card>
