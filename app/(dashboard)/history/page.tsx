@@ -112,18 +112,24 @@ function pruneExpired(archived: Record<string, string>): Record<string, string> 
    SUB-COMPONENTS
 ══════════════════════════════════════════════════════════════════════ */
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, onClick }: { status: string; onClick?: (e: React.MouseEvent) => void }) {
   const m: Record<string, { cls: string; label: string }> = {
-    completed: { cls: "text-[var(--signal-green)] bg-[var(--signal-green-bg)]", label: "Completed" },
-    failed:    { cls: "text-[var(--signal-red)]   bg-[var(--signal-red-bg)]",   label: "Failed"    },
-    running:   { cls: "text-[var(--signal-amber)] bg-[var(--signal-amber-bg)]", label: "Running"   },
+    completed: { cls: "text-[var(--signal-green)] bg-[var(--signal-green-bg)]",   label: "Completed" },
+    failed:    { cls: "text-[var(--signal-red)]   bg-[var(--signal-red-bg)]",     label: "Failed"    },
+    running:   { cls: "text-[var(--signal-amber)] bg-[var(--signal-amber-bg)] cursor-pointer hover:opacity-80", label: "Running" },
   };
   const cfg = m[status] ?? { cls: "text-muted-foreground bg-muted", label: status };
   return (
-    <span className={cn(
-      "inline-flex items-center h-5 px-2 rounded font-mono text-[11px] font-medium",
-      cfg.cls,
-    )}>
+    <span
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 h-5 px-2 rounded font-mono text-[11px] font-medium",
+        cfg.cls,
+      )}
+    >
+      {status === "running" && (
+        <span className="size-1.5 rounded-full bg-[var(--signal-amber)] animate-pulse" />
+      )}
       {cfg.label}
     </span>
   );
@@ -309,6 +315,7 @@ export function RunTable({
   runs, starred, archived, onToggleStar, onArchive, onRestore,
   onRowClick, isArchivePage, emptyMessage,
 }: RunTableProps) {
+  const router = useRouter();
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -517,7 +524,13 @@ export function RunTable({
                       <CoverageCell value={r.global_coverage} />
                     </TableCell>
                     <TableCell>
-                      <StatusBadge status={r.status} />
+                      <StatusBadge
+                        status={r.status}
+                        onClick={r.status === "running" ? (e) => {
+                          e.stopPropagation();
+                          router.push("/playground");
+                        } : undefined}
+                      />
                     </TableCell>
                     <TableCell className="text-right font-mono text-[12px] text-muted-foreground tabular-nums">
                       {dur || <span className="text-muted-foreground/30">-</span>}

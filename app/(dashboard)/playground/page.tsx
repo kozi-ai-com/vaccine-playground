@@ -14,6 +14,7 @@ import { PipelineAnimation } from "@/components/pipeline-animation";
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import type { InputType, PipelineStatusResponse } from "@/types";
+import { useRunStore } from "@/store/run-store";
 import { cn } from "@/lib/utils";
 
 /*
@@ -175,7 +176,8 @@ export default function PlaygroundPage() {
   const [runId,    setRunId]    = useState<string | null>(null);
   const [runLabel, setRunLabel] = useState<string>("");
 
-  const poll = useRef<ReturnType<typeof setInterval> | null>(null);
+  const poll        = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { setActiveRun, updateActiveRun, clearActiveRun } = useRunStore();
 
   const stopPolling = useCallback(() => {
     if (poll.current) { clearInterval(poll.current); poll.current = null; }
@@ -187,11 +189,19 @@ export default function PlaygroundPage() {
       try {
         const s = await api.getStatus(id);
         setPs(s);
+        updateActiveRun({
+          status:      s.status,
+          progress:    s.progress ?? 0,
+          currentNode: s.current_node ?? null,
+          message:     s.message ?? null,
+        });
         if (s.status === "completed") {
           stopPolling(); setRunning(false); setPaused(false);
+          updateActiveRun({ status: "completed", progress: 1 });
           router.push(`/results/${id}`);
         } else if (s.status === "failed") {
           stopPolling(); setRunning(false); setPaused(false);
+          updateActiveRun({ status: "failed" });
           setError(s.message || "Pipeline failed.");
         }
       } catch (e) { console.error(e); }
@@ -227,6 +237,16 @@ export default function PlaygroundPage() {
       const r = await api.startRun(body);
       setRunId(r.run_id);
       setPs({ run_id: r.run_id, status: "pending", current_node: null, progress: 0, message: "Queued…", started_at: null, completed_at: null });
+      setActiveRun({
+        runId:       r.run_id,
+        label:       inputType === "sequence" ? (proteinName.trim() || "Custom sequence") : inputValue.trim(),
+        inputType,
+        status:      "pending",
+        progress:    0,
+        currentNode: null,
+        message:     "Queued…",
+        startedAt:   new Date().toISOString(),
+      });
       startPolling(r.run_id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to start pipeline.");
@@ -248,6 +268,7 @@ export default function PlaygroundPage() {
   const handleStop = () => {
     stopPolling(); setRunning(false); setPaused(false); setRunLabel("");
     if (ps) setPs({ ...ps, status: "cancelled", message: "Cancelled by user." });
+    updateActiveRun({ status: "cancelled" });
   };
 
   const IconProfile  = profileConfig.icon;
