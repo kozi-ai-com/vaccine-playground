@@ -36,7 +36,7 @@ const navMain = [
 
     ],
   },
-  {
+  /**{
     title: "Agents",
     url: "/agents",
     icon: Bot,
@@ -79,7 +79,7 @@ const navMain = [
     icon: Users,
     soon: true,
     items: [],
-  },
+  },**/
   {
     title: "Archive",
     url: "/archive",
@@ -91,7 +91,7 @@ const navMain = [
 
 const navSecondary = [
   { title: "Settings", url: "/settings", icon: Settings },
-  { title: "Documentation", url: "https://docs.kozi-ai.com", icon: BookOpen, external: true },
+  /**{ title: "Documentation", url: "https://docs.kozi-ai.com", icon: BookOpen, external: true }, **/
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
