@@ -1,13 +1,5 @@
 "use client";
 
-/**
- * Archive /archive
- * Archived runs (via history > Archive action).
- * Auto-expires after ARCHIVE_TTL_DAYS days.
- * Only action available: Restore (sends back to History).
- * Same table as History but no star column, no archive action.
- */
-
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconArchive } from "@tabler/icons-react";
