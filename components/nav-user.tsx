@@ -1,22 +1,22 @@
 "use client"
 
-/**
- * NavUser
- * Base UI constraint: DropdownMenuTrigger asChild + SidebarMenuButton = button-in-button.
- * Fix: DropdownMenuTrigger renders its own element with sidebar button classes applied
- * directly. SidebarMenuButton is NOT used inside the trigger.
- */
-
 import {
-  ChevronsUpDown, LogOut, Settings, User, Bell,
+  ChevronsUpDown, LogOut, User, SunMoon, Sun, Moon, Monitor, Sparkles, Bug, Heart,
 } from "lucide-react"
+import { useTheme } from "next-themes"
+import { useRouter } from "next/navigation"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -25,7 +25,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/components/auth-provider"
-import { useRouter } from "next/navigation"
+import { useBugReport } from "@/components/bug-report-drawer"
+
+/* Set to the page path (e.g. "/sponsor") once that page exists.
+   While null, "Sponsor us" is shown but does nothing, like "What's new". */
+const SPONSOR_HREF: string | null = null
 
 function DiceBearAvatar({ email, name, size = 32 }: { email: string; name: string; size?: number }) {
   const seed = encodeURIComponent(email || name || "researcher")
@@ -37,28 +41,41 @@ function DiceBearAvatar({ email, name, size = 32 }: { email: string; name: strin
   )
 }
 
+const THEMES = [
+  { value: "light",  label: "Light",  icon: Sun     },
+  { value: "dark",   label: "Dark",   icon: Moon    },
+  { value: "system", label: "System", icon: Monitor },
+] as const
+
 export function NavUser({ user }: { user: { name: string; title?: string; email: string } }) {
-  const { isMobile } = useSidebar()
-  const { signOut }  = useAuth() as any
-  const router       = useRouter()
+  const { isMobile }          = useSidebar()
+  const { signOut }           = useAuth()
+  const { theme, setTheme }   = useTheme()
+  const router                = useRouter()
+  const { openBugReport }     = useBugReport()
+
+  /* Same flow as Settings page: sign out, then go to /login. */
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      router.replace("/login")
+    } catch (e) {
+      console.error("Failed to log out:", e)
+    }
+  }
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          {/*
-            CRITICAL Base UI constraint:
-            DropdownMenuTrigger asChild + SidebarMenuButton = button-in-button.
-            Fix: no asChild, no SidebarMenuButton inside trigger.
-            Apply sidebar button classes directly to the trigger element.
-          */}
+          {/* The whole card is the trigger: avatar, name, title and arrows all open the menu. */}
           <DropdownMenuTrigger
-            className="peer/menu-button group/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-12 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:p-2"
+            className="peer/menu-button group/menu-button flex h-12 w-full cursor-pointer items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:p-0"
           >
             <DiceBearAvatar email={user.email} name={user.name} size={32} />
-            <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-              <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-xs text-sidebar-foreground/50">
+            <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+              <span className="truncate text-sm font-medium">{user.name}</span>
+              <span className="truncate text-xs text-tertiary">
                 {user.title || "Vaccine Researcher"}
               </span>
             </div>
@@ -66,48 +83,89 @@ export function NavUser({ user }: { user: { name: string; title?: string; email:
           </DropdownMenuTrigger>
 
           <DropdownMenuContent
-            className="min-w-56 rounded-lg"
+            className="w-60 rounded-lg p-2"
             side={isMobile ? "bottom" : "right"}
             align="end"
-            sideOffset={4}
+            sideOffset={8}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-3 px-3 py-2.5">
-                <DiceBearAvatar email={user.email} name={user.name} size={40} />
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {user.title || "Vaccine Researcher"}
-                  </span>
-                  <span className="truncate text-[11px] text-muted-foreground/60 mt-0.5">
-                    {user.email}
-                  </span>
-                </div>
-              </div>
-            </DropdownMenuLabel>
+            {/* GroupLabel must be inside a Group (Base UI). */}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="grid gap-0.5 px-2 py-2.5 leading-tight">
+                <span className="truncate text-sm font-medium text-foreground">{user.name}</span>
+                <span className="truncate text-xs font-normal text-muted-foreground">{user.email}</span>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
 
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="mx-2 my-2 bg-foreground/10" />
 
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
-                <User className="size-4" strokeWidth={1.5} />Account
+              <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer gap-2 px-2 py-1.5">
+                <User className="size-4" strokeWidth={1.5} />
+                Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
-                <Settings className="size-4" strokeWidth={1.5} />Settings
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="cursor-pointer gap-2 px-2 py-1.5">
+                  <SunMoon className="size-4" strokeWidth={1.5} />
+                  Appearance
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="min-w-40 rounded-lg p-2" sideOffset={8}>
+                  <DropdownMenuRadioGroup
+                    value={theme ?? "system"}
+                    onValueChange={(v) => setTheme(String(v))}
+                  >
+                    {THEMES.map(({ value, label, icon: Icon }) => (
+                      <DropdownMenuRadioItem key={value} value={value} closeOnClick className="cursor-pointer gap-2 py-1.5 pl-2">
+                        <Icon className="size-4" strokeWidth={1.5} />
+                        {label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </DropdownMenuGroup>
+
+            <DropdownMenuSeparator className="mx-2 my-2 bg-foreground/10" />
+
+            <DropdownMenuGroup>
+              {/* Inert on purpose: no handler, and the menu stays open if clicked. */}
+              <DropdownMenuItem
+                closeOnClick={false}
+                className="cursor-default gap-2 px-2 py-1.5 focus:bg-transparent"
+              >
+                <Sparkles className="size-4" strokeWidth={1.5} />
+                What&apos;s new
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Bell className="size-4" strokeWidth={1.5} />Notifications
+
+              <DropdownMenuItem onClick={openBugReport} className="cursor-pointer gap-2 px-2 py-1.5">
+                <Bug className="size-4" strokeWidth={1.5} />
+                Report bug
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                closeOnClick={SPONSOR_HREF !== null}
+                onClick={SPONSOR_HREF ? () => router.push(SPONSOR_HREF) : undefined}
+                className={SPONSOR_HREF
+                  ? "cursor-pointer gap-2 px-2 py-1.5"
+                  : "cursor-default gap-2 px-2 py-1.5 focus:bg-transparent"}
+              >
+                <Heart className="size-4" strokeWidth={1.5} />
+                Sponsor us
               </DropdownMenuItem>
             </DropdownMenuGroup>
 
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="mx-2 my-2 bg-foreground/10" />
 
-            <DropdownMenuItem
-              onClick={() => signOut?.()}
-              className="text-destructive focus:text-destructive cursor-pointer"
-            >
-              <LogOut className="size-4" strokeWidth={1.5} />Sign out
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={handleLogout}
+                className="cursor-pointer gap-2 px-2 py-1.5"
+              >
+                <LogOut className="size-4" strokeWidth={1.5} />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
