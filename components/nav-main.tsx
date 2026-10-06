@@ -1,12 +1,5 @@
 "use client"
 
-/**
- * NavMain
- * Accordion behaviour: only one group open at a time.
- * Base UI safe: no asChild nesting.
- * Supports soon?: boolean badge on leaf items (no subitems).
- */
-
 import { ChevronRight, type LucideIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useCallback } from "react"
@@ -157,12 +150,19 @@ export function NavMain({ items }: { items: NavItem[] }) {
                   {item.icon && <item.icon className="size-4 shrink-0" strokeWidth={1.5} />}
                   <span className="truncate flex-1">{item.title}</span>
                   <ChevronRight
-                    className="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                    className="ml-auto size-4 shrink-0 transition-transform duration-200 ease-out group-data-[panel-open]/menu-button:rotate-90"
                     strokeWidth={1.5}
                   />
                 </CollapsibleTrigger>
 
-                <CollapsibleContent>
+                {/*
+                  Base UI exposes the panel height as --collapsible-panel-height and
+                  toggles data-starting-style / data-ending-style while animating.
+                  Height + fade, 200ms, same timing as the chevron.
+                */}
+                <CollapsibleContent
+                  className="h-(--collapsible-panel-height) overflow-hidden transition-[height,opacity] duration-200 ease-out data-starting-style:h-0 data-starting-style:opacity-0 data-ending-style:h-0 data-ending-style:opacity-0"
+                >
                   <SidebarMenuSub>
                     {item.items?.map((sub) => {
                       const subActive = pathname === sub.url.split("?")[0]
