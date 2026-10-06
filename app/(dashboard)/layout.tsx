@@ -15,7 +15,7 @@ import { useAuth } from "@/components/auth-provider";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SessionGuard } from "@/components/session-guard";
-import { RunMonitor } from "@/components/run-monitor";
+import { BugReportProvider } from "@/components/bug-report-drawer";
 import {
   SidebarInset,
   SidebarProvider,
@@ -23,23 +23,21 @@ import {
 
 function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
-    /*
-      SidebarProvider manages collapse state internally.
-      SidebarInset is the main content area, it automatically
-      offsets from the sidebar and fills remaining width.
-      No custom width tracking, no dead space.
-    */
+    
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         {/* SiteHeader sits inside SidebarInset so it scrolls with the sidebar trigger */}
         <SiteHeader />
         <SessionGuard />
+        {/*
+          Main content area.
+          overflow-auto: each page manages its own scroll.
+          flex-1 min-h-0: fills the remaining height of SidebarInset.
+        */}
         <main className="flex-1 min-h-0 overflow-auto">
           {children}
         </main>
-        {/* Persistent run monitor, survives all page navigation */}
-        <RunMonitor />
       </SidebarInset>
     </SidebarProvider>
   );
@@ -65,5 +63,9 @@ export default function DashboardLayout({
     );
   }
 
-  return <DashboardShell>{children}</DashboardShell>;
+  return (
+    <BugReportProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </BugReportProvider>
+  );
 }
