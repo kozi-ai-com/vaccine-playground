@@ -124,12 +124,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
               className="group/collapsible"
             >
               <SidebarMenuItem>
-                {/*
-                  CRITICAL Base UI constraint (HANDOFF.md):
-                  CollapsibleTrigger + SidebarMenuButton asChild = button-in-button.
-                  Apply sidebar CSS classes directly to CollapsibleTrigger.
-                  One element, one <button>.
-                */}
+                {}
                 <CollapsibleTrigger
                   data-sidebar="menu-button"
                   data-size="default"
@@ -155,11 +150,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                   />
                 </CollapsibleTrigger>
 
-                {/*
-                  Base UI exposes the panel height as --collapsible-panel-height and
-                  toggles data-starting-style / data-ending-style while animating.
-                  Height + fade, 200ms, same timing as the chevron.
-                */}
+                {}
                 <CollapsibleContent
                   className="h-(--collapsible-panel-height) overflow-hidden transition-[height,opacity] duration-200 ease-out data-starting-style:h-0 data-starting-style:opacity-0 data-ending-style:h-0 data-ending-style:opacity-0"
                 >
