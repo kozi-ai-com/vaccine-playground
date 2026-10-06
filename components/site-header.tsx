@@ -4,26 +4,19 @@ import { usePathname, useParams } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import { Moon, Sun, Monitor, Bug } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
 
 import {
   Breadcrumb, BreadcrumbItem, BreadcrumbLink,
   BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Drawer, DrawerClose, DrawerContent, DrawerDescription,
-  DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger,
-} from "@/components/ui/drawer"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { useBugReport } from "@/components/bug-report-drawer"
 
 /* ── GMT+2 clock ── */
 function GMT2Clock() {
@@ -52,11 +45,7 @@ function GMT2Clock() {
   )
 }
 
-/* ── ModeToggle ──────────────────────────────────────────────────────────
-   FIX: Base UI DropdownMenuTrigger does NOT support asChild.
-   Removed asChild entirely. Styles applied directly to DropdownMenuTrigger.
-   motion.button caused nested <button><button> hydration crash.
-────────────────────────────────────────────────────────────────────────── */
+
 function ModeToggle() {
   const { setTheme, resolvedTheme } = useTheme()
 
@@ -92,89 +81,18 @@ function ModeToggle() {
   )
 }
 
-/* ── Bug report drawer ───────────────────────────────────────────────────
-   FIX: DrawerTrigger asChild + motion.button = same nested button crash.
-   Removed asChild. Styles applied directly to DrawerTrigger.
-────────────────────────────────────────────────────────────────────────── */
-function BugReportDrawer() {
-  const [desc, setDesc] = useState("")
-  const [sent, setSent]  = useState(false)
-  const [open, setOpen]  = useState(false)
 
-  const handleSubmit = () => {
-    console.info("[bug-report]", desc)
-    setSent(true)
-    setTimeout(() => { setSent(false); setDesc(""); setOpen(false) }, 2500)
-  }
-
+function BugReportButton() {
+  const { openBugReport } = useBugReport()
   return (
-    <Drawer open={open} onOpenChange={setOpen} direction="right">
-      <DrawerTrigger
-        aria-label="Report a bug"
-        className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <Bug className="size-[18px]" strokeWidth={1.5} />
-      </DrawerTrigger>
-
-      <DrawerContent className="fixed right-0 top-0 h-full w-[400px] flex flex-col bg-background border-l border-border/20 rounded-none">
-        <DrawerHeader className="border-b border-border/20 px-5 py-4 shrink-0">
-          <DrawerTitle className="text-sm font-semibold">Report a bug</DrawerTitle>
-          <DrawerDescription className="text-sm text-muted-foreground mt-0.5">
-            Describe what happened. We'll investigate and follow up.
-          </DrawerDescription>
-        </DrawerHeader>
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-          <div className="space-y-1.5">
-            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-widest">Page</Label>
-            <p className="text-sm font-mono bg-muted rounded px-2.5 py-1.5 select-all border border-border/20">
-              {typeof window !== "undefined" ? window.location.pathname : "-"}
-            </p>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="bug-desc" className="text-[11px] font-medium text-muted-foreground uppercase tracking-widest">Description</Label>
-            <Textarea
-              id="bug-desc" rows={8} placeholder="Steps to reproduce…"
-              value={desc} onChange={e => setDesc(e.target.value)}
-              className="text-sm resize-none"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-widest">Browser</Label>
-            <p className="text-sm text-muted-foreground leading-relaxed break-all">
-              {typeof window !== "undefined" ? navigator.userAgent : "-"}
-            </p>
-          </div>
-        </div>
-        <DrawerFooter className="border-t border-border/20 px-5 py-4 flex flex-row gap-2 shrink-0">
-          <AnimatePresence mode="wait">
-            {sent ? (
-              <motion.p
-                key="sent"
-                initial={{ opacity:0 }} animate={{ opacity:1 }}
-                className="text-sm text-emerald-600 dark:text-emerald-400 font-medium"
-              >
-                Sent, thank you.
-              </motion.p>
-            ) : (
-              <motion.div key="form" className="flex gap-2 flex-1">
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!desc.trim()}
-                  className="flex-1 h-9 text-sm"
-                >
-                  Send report
-                </Button>
-                <DrawerClose
-                  className="h-9 px-4 text-sm rounded-md border border-border bg-transparent hover:bg-accent transition-colors"
-                >
-                  Cancel
-                </DrawerClose>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+    <button
+      type="button"
+      onClick={openBugReport}
+      aria-label="Report a bug"
+      className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <Bug className="size-[18px]" strokeWidth={1.5} />
+    </button>
   )
 }
 
@@ -246,7 +164,7 @@ export function SiteHeader() {
           <GMT2Clock />
           <div className="w-px h-4 bg-border/30 mx-2" />
           <ModeToggle />
-          <BugReportDrawer />
+          <BugReportButton />
         </div>
 
       </div>
